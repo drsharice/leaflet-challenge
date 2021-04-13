@@ -1,9 +1,11 @@
 {
   "ExpandedNodes": [
     "",
-    "\\static",
-    "\\static\\js"
+    "\\Leaflet-Step-1",
+    "\\Leaflet-Step-1\\static",
+    "\\Leaflet-Step-1\\static\\data",
+    "\\Leaflet-Step-1\\static\\js"
   ],
-  "SelectedNode": "\\static\\js\\logic.js",
+  "SelectedNode": "\\Leaflet-Step-1\\index.html",
   "PreviewInSolutionExplorer": false
 }

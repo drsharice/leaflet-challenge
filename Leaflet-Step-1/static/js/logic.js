@@ -1,60 +1,48 @@
-function createMap(bikeStations) {
+// Creating map object
+var myMap = L.map("map", {
+    center: [40.7, -73.95],
+    zoom: 3
+});
 
-    // Create the tile layer that will be the background of our map
-    var lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
-        attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
-        maxZoom: 18,
-        id: "light-v10",
-        accessToken: API_KEY
-    });
+// Adding tile layer to the map
+L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+    attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
+    tileSize: 512,
+    maxZoom: 18,
+    zoomOffset: -1,
+    id: "mapbox/streets-v11",
+    accessToken: API_KEY
+}).addTo(myMap);
 
-    // Create a baseMaps object to hold the lightmap layer
-    var baseMaps = {
-        "Light Map": lightmap
-    };
+// Store API query variables
+var url  = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson";
 
-    // Create an overlayMaps object to hold the bikeStations layer
-    var overlayMaps = {
-        "Bike Stations": bikeStations
-    };
 
-    // Create the map object with options
-    var map = L.map("map-id", {
-        center: [40.73, -74.0059],
-        zoom: 12,
-        layers: [lightmap, bikeStations]
-    });
 
-    // Create a layer control, pass in the baseMaps and overlayMaps. Add the layer control to the map
-    L.control.layers(baseMaps, overlayMaps, {
-        collapsed: false
-    }).addTo(map);
-}
 
-function createMarkers(response) {
+// Grab the data with d3
+d3.json(url, function (response) {
 
-    // Pull the "stations" property off of response.data
-    var stations = response.data.stations;
+    // Create a new marker cluster group
+    var markers = L.markerClusterGroup();
 
-    // Initialize an array to hold bike markers
-    var bikeMarkers = [];
+    // Loop through data
+    for (var i = 0; i < response.length; i++) {
 
-    // Loop through the stations array
-    for (var index = 0; index < stations.length; index++) {
-        var station = stations[index];
+        // Set the data location property to a variable
+        var location = response[i].location;
 
-        // For each station, create a marker and bind a popup with the station's name
-        var bikeMarker = L.marker([station.lat, station.lon])
-            .bindPopup("<h3>" + station.name + "<h3><h3>Capacity: " + station.capacity + "</h3>");
+        // Check for location property
+        if (location) {
 
-        // Add the marker to the bikeMarkers array
-        bikeMarkers.push(bikeMarker);
+            // Add a new marker to the cluster group and bind a pop-up
+            markers.addLayer(L.marker([location.coordinates[1], location.coordinates[0]])
+                .bindPopup(response[i].descriptor));
+        }
+
     }
 
-    // Create a layer group made from the bike markers array, pass it into the createMap function
-    createMap(L.layerGroup(bikeMarkers));
-}
+    // Add our marker cluster layer to the map
+    myMap.addLayer(markers);
 
-
-// Perform an API call to the Citi Bike API to get station information. Call createMarkers when complete
-d3.json("https://gbfs.citibikenyc.com/gbfs/en/station_information.json", createMarkers);
+});
